@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrganízateFácil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    section {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    form input,
+    form select {
+      padding: 6px;
+      flex: 1;
+      min-width: 160px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      margin-bottom: 5px;
+      box-sizing: border-box;
+    }
+    .estado {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .estado-pendiente {
+      background-color: #ffe0e0;
+      border: 1px solid #ff8a80;
+    }
+    .estado-en-progreso {
+      background-color: #fff9c4;
+      border: 1px solid #fbc02d;
+    }
+    .estado-completado {
+      background-color: #c8e6c9;
+      border: 1px solid #66bb6a;
+    }
+    .acciones button {
+      margin-left: 5px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .subtitulo {
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: -5px;
+      margin-bottom: 10px;
+    }
+    .asignado-a {
+      font-size: 0.8rem;
+      color: #444;
+    }
+    .bloque-izq {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 2px;
+    }
+
+    /* ====== ESTILOS RESPONSIVOS ====== */
+    @media (max-width: 600px) {
+      body {
+        margin: 10px;
+      }
+
+      section {
+        padding: 10px;
+      }
+
+      form {
+        flex-direction: column;
+      }
+
+      form input,
+      form select,
+      form button {
+        width: 100%;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .acciones {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+      .acciones button {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>OrganízateFácil</h1>
+
+<!-- ==============
+     LOGIN / REGISTRO
+     ============== -->
+<section id="auth-section">
+  <h2>Registro</h2>
+  <form id="register-form">
+    <input type="text" id="reg-username" placeholder="Nombre de usuario" required />
+    <input type="password" id="reg-password" placeholder="Contraseña" required />
+    <input type="password" id="reg-password2" placeholder="Repetir contraseña" required />
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <h2>Iniciar sesión</h2>
+  <form id="login-form">
+    <input type="text" id="login-username" placeholder="Nombre de usuario" required />
+    <input type="password" id="login-password" placeholder="Contraseña" required />
+    <button type="submit">Iniciar sesión</button>
+  </form>
+</section>
+
+<!-- ==============
+     APP (SOLO LOGUEADO)
+     ============== -->
+<section id="app-section" style="display:none;">
+  <div class="top-bar">
+    <div>
+      Usuario: <strong><span id="user-name"></span></strong>
+    </div>
+    <button id="logout-button">Cerrar sesión</button>
+  </div>
+
+  <!-- GRUPO -->
+  <section id="group-section">
+    <h2>Equipo</h2>
+    <p class="subtitulo">
+      Escribe el nombre del equipo para crearlo o unirte a él.
+    </p>
+    <form id="group-form">
+      <input type="text" id="group-name" placeholder="Nombre del grupo (ej: equipo1)" required />
+      <button type="submit">Crear / Unirse</button>
+    </form>
+    <p>Equipo actual: <strong><span id="current-group">Ninguno</span></strong></p>
+  </section>
+
+  <!-- TAREAS PERSONALES -->
+  <section id="personal-tasks-section">
+    <h2>Tareas personales</h2>
+    <form id="task-form">
+      <input type="text" id="task-input" placeholder="Nueva tarea personal" required />
+      <select id="task-status">
+        <option value="pendiente">Pendiente</option>
+        <option value="en-progreso">En progreso</option>
+        <option value="completado">Completado</option>
+      </select>
+      <input type="hidden" id="editing-index">
+      <button id="save-button" type="submit">Guardar</button>
+      <button id="cancel-edit-button" type="button" style="display:none;">Cancelar</button>
+    </form>
+    <ul id="task-list"></ul>
+  </section>
+
+  <!-- TAREAS GRUPALES -->
+  <section id="group-tasks-section" style="display:none;">
+    <h2>Tareas grupales</h2>
+    <p class="subtitulo">
+      Tareas visibles para todos los integrantes del equipo.
+    </p>
+    <form id="group-task-form">
+      <input type="text" id="group-task-input" placeholder="Nueva tarea grupal" required />
+      <select id="group-task-status">
+        <option value="pendiente">Pendiente</option>
+        <option value="en-progreso">En progreso</option>
+        <option value="completado">Completado</option>
+      </select>
+      <!-- selección de usuario asignado -->
+      <select id="group-task-assignee">
+        <!-- opciones se llenan dinámicamente -->
+      </select>
+
+      <input type="hidden" id="group-editing-index">
+      <button id="group-save-button" type="submit">Guardar</button>
+      <button id="group-cancel-edit-button" type="button" style="display:none;">Cancelar</button>
+    </form>
+    <ul id="group-task-list"></ul>
+  </section>
+</section>
+
+<script>
+  // ==== CONSTANTES STORAGE ====
+  const USERS_KEY = "crud_usuarios_username";
+  const CURRENT_USER_KEY = "crud_usuario_actual";
+  const TASK_PREFIX = "crud_tareas_";             // + username
+  const GROUP_TASK_PREFIX = "crud_group_tareas_"; // + groupName
+
+  // ==== ESTADO EN MEMORIA ====
+  let users = [];          // { username, password, group? }
+  let currentUser = null;  // nombre de usuario actual
+  let tasks = [];          // tareas personales
+  let groupTasks = [];     // tareas grupales { text, status, assignee }
+
+  // ==== DOM AUTH ====
+  const authSection = document.getElementById("auth-section");
+  const registerForm = document.getElementById("register-form");
+  const regUsername = document.getElementById("reg-username");
+  const regPassword = document.getElementById("reg-password");
+  const regPassword2 = document.getElementById("reg-password2");
+
+  const loginForm = document.getElementById("login-form");
+  const loginUsername = document.getElementById("login-username");
+  const loginPassword = document.getElementById("login-password");
+
+  // ==== DOM APP ====
+  const appSection = document.getElementById("app-section");
+  const userNameSpan = document.getElementById("user-name");
+  const logoutButton = document.getElementById("logout-button");
+
+  // Grupo
+  const groupForm = document.getElementById("group-form");
+  const groupNameInput = document.getElementById("group-name");
+  const currentGroupSpan = document.getElementById("current-group");
+  const groupTasksSection = document.getElementById("group-tasks-section");
+
+  // Tareas personales
+  const taskForm = document.getElementById("task-form");
+  const taskInput = document.getElementById("task-input");
+  const taskStatus = document.getElementById("task-status");
+  const editingIndex = document.getElementById("editing-index");
+  const saveButton = document.getElementById("save-button");
+  const cancelEditButton = document.getElementById("cancel-edit-button");
+  const taskList = document.getElementById("task-list");
+
+  // Tareas grupales
+  const groupTaskForm = document.getElementById("group-task-form");
+  const groupTaskInput = document.getElementById("group-task-input");
+  const groupTaskStatus = document.getElementById("group-task-status");
+  const groupTaskAssignee = document.getElementById("group-task-assignee");
+  const groupEditingIndex = document.getElementById("group-editing-index");
+  const groupSaveButton = document.getElementById("group-save-button");
+  const groupCancelEditButton = document.getElementById("group-cancel-edit-button");
+  const groupTaskList = document.getElementById("group-task-list");
+
+  // Texto para estados
+  const statusText = {
+    "pendiente": "Pendiente",
+    "en-progreso": "En progreso",
+    "completado": "Completado"
+  };
+
+  // ==== INICIALIZACIÓN ====
+  loadUsers();
+  autoLogin();
+
+  // ==== REGISTRO ====
+  registerForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const username = regUsername.value.trim();
+    const pass1 = regPassword.value;
+    const pass2 = regPassword2.value;
+
+    if (!username) {
+      alert("Ingresa un nombre de usuario.");
+      return;
+    }
+    if (pass1 !== pass2) {
+      alert("Las contraseñas no coinciden.");
+      return;
+    }
+    if (users.some(u => u.username === username)) {
+      alert("Ese nombre de usuario ya existe.");
+      return;
+    }
+
+    users.push({ username, password: pass1 });
+    saveUsers();
+    alert("Usuario registrado. Ahora puedes iniciar sesión.");
+    registerForm.reset();
+  });
+
+  // ==== LOGIN ====
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const username = loginUsername.value.trim();
+    const pass = loginPassword.value;
+
+    const user = users.find(
+      u => u.username === username && u.password === pass
+    );
+
+    if (!user) {
+      alert("Usuario o contraseña incorrectos.");
+      return;
+    }
+
+    currentUser = user.username;
+    localStorage.setItem(CURRENT_USER_KEY, currentUser);
+    enterApp();
+    loginForm.reset();
+  });
+
+  // ==== LOGOUT ====
+  logoutButton.addEventListener("click", () => {
+    currentUser = null;
+    localStorage.removeItem(CURRENT_USER_KEY);
+    showAuth();
+  });
+
+  // ==== GRUPO: CREAR / UNIRSE ====
+  groupForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!currentUser) {
+      alert("Primero inicia sesión.");
+      return;
+    }
+
+    const groupName = groupNameInput.value.trim();
+    if (!groupName) return;
+
+    const user = users.find(u => u.username === currentUser);
+    if (!user) return;
+
+    user.group = groupName;
+    saveUsers();
+
+    updateGroupUI();
+    loadGroupTasks();
+    renderGroupTasks();
+    refreshAssigneeOptions();
+    groupForm.reset();
+  });
+
+  // ==== TAREAS PERSONALES (CRUD) ====
+  taskForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!currentUser) {
+      alert("Debes iniciar sesión.");
+      return;
+    }
+
+    const text = taskInput.value.trim();
+    const status = taskStatus.value;
+    if (!text) return;
+
+    if (editingIndex.value === "") {
+      tasks.push({ text, status });
+    } else {
+      const i = Number(editingIndex.value);
+      tasks[i] = { text, status };
+    }
+
+    saveTasks();
+    renderTasks();
+    resetTaskForm();
+  });
+
+  taskList.addEventListener("click", (e) => {
+    if (!e.target.matches("button")) return;
+
+    const index = Number(e.target.dataset.index);
+    const action = e.target.dataset.action;
+
+    if (action === "edit") {
+      const t = tasks[index];
+      taskInput.value = t.text;
+      taskStatus.value = t.status;
+      editingIndex.value = index;
+      saveButton.textContent = "Actualizar";
+      cancelEditButton.style.display = "inline-block";
+      taskInput.focus();
+    }
+
+    if (action === "delete") {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks();
+      resetTaskForm();
+    }
+  });
+
+  cancelEditButton.addEventListener("click", resetTaskForm);
+
+  // ==== TAREAS GRUPALES (CRUD + ASIGNACIÓN) ====
+  groupTaskForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const user = users.find(u => u.username === currentUser);
+    if (!user || !user.group) {
+      alert("Debes crear o unirte a un grupo primero.");
+      return;
+    }
+
+    const text = groupTaskInput.value.trim();
+    const status = groupTaskStatus.value;
+    let assignee = groupTaskAssignee.value;
+
+    if (!text) return;
+
+    if (!assignee) {
+      assignee = currentUser;
+    }
+
+    if (groupEditingIndex.value === "") {
+      groupTasks.push({ text, status, assignee });
+    } else {
+      const i = Number(groupEditingIndex.value);
+      groupTasks[i] = { text, status, assignee };
+    }
+
+    saveGroupTasks();
+    renderGroupTasks();
+    resetGroupTaskForm();
+  });
+
+  groupTaskList.addEventListener("click", (e) => {
+    if (!e.target.matches("button")) return;
+
+    const index = Number(e.target.dataset.index);
+    const action = e.target.dataset.action;
+
+    if (action === "edit") {
+      const t = groupTasks[index];
+      groupTaskInput.value = t.text;
+      groupTaskStatus.value = t.status || "pendiente";
+      groupTaskAssignee.value = t.assignee || currentUser;
+      groupEditingIndex.value = index;
+      groupSaveButton.textContent = "Actualizar";
+      groupCancelEditButton.style.display = "inline-block";
+      groupTaskInput.focus();
+    }
+
+    if (action === "delete") {
+      groupTasks.splice(index, 1);
+      saveGroupTasks();
+      renderGroupTasks();
+      resetGroupTaskForm();
+    }
+  });
+
+  groupCancelEditButton.addEventListener("click", resetGroupTaskForm);
+
+  // ==== VISTAS ====
+  function enterApp() {
+    authSection.style.display = "none";
+    appSection.style.display = "block";
+    userNameSpan.textContent = currentUser;
+
+    loadTasks();
+    renderTasks();
+
+    updateGroupUI();
+    loadGroupTasks();
+    renderGroupTasks();
+    refreshAssigneeOptions();
+  }
+
+  function showAuth() {
+    authSection.style.display = "block";
+    appSection.style.display = "none";
+    userNameSpan.textContent = "";
+    currentGroupSpan.textContent = "Ninguno";
+    tasks = [];
+    groupTasks = [];
+    taskList.innerHTML = "";
+    groupTaskList.innerHTML = "";
+    groupTasksSection.style.display = "none";
+    resetTaskForm();
+    resetGroupTaskForm();
+  }
+
+  function autoLogin() {
+    const saved = localStorage.getItem(CURRENT_USER_KEY);
+    if (saved) {
+      currentUser = saved;
+      enterApp();
+    } else {
+      showAuth();
+    }
+  }
+
+  function updateGroupUI() {
+    const user = users.find(u => u.username === currentUser);
+    if (user && user.group) {
+      currentGroupSpan.textContent = user.group;
+      groupTasksSection.style.display = "block";
+    } else {
+      currentGroupSpan.textContent = "Ninguno";
+      groupTasksSection.style.display = "none";
+      groupTasks = [];
+      groupTaskList.innerHTML = "";
+    }
+  }
+
+  function renderTasks() {
+    taskList.innerHTML = "";
+    tasks.forEach((t, i) => {
+      taskList.innerHTML += `
+        <li>
+          <span>${t.text}</span>
+          <span class="estado estado-${t.status}">${statusText[t.status]}</span>
+          <div class="acciones">
+            <button data-index="${i}" data-action="edit">Editar</button>
+            <button data-index="${i}" data-action="delete">Eliminar</button>
+          </div>
+        </li>
+      `;
+    });
+  }
+
+  function renderGroupTasks() {
+    groupTaskList.innerHTML = "";
+    groupTasks.forEach((t, i) => {
+      const estadoClase = "estado-" + (t.status || "pendiente");
+      const estadoTexto = statusText[t.status || "pendiente"];
+      const asignado = t.assignee || "(sin asignar)";
+      groupTaskList.innerHTML += `
+        <li>
+          <div class="bloque-izq">
+            <span>${t.text}</span>
+            <span class="asignado-a">Asignado a: <strong>${asignado}</strong></span>
+          </div>
+          <span class="estado ${estadoClase}">${estadoTexto}</span>
+          <div class="acciones">
+            <button data-index="${i}" data-action="edit">Editar</button>
+            <button data-index="${i}" data-action="delete">Eliminar</button>
+          </div>
+        </li>
+      `;
+    });
+  }
+
+  function resetTaskForm() {
+    taskForm.reset();
+    taskStatus.value = "pendiente";
+    editingIndex.value = "";
+    saveButton.textContent = "Guardar";
+    cancelEditButton.style.display = "none";
+  }
+
+  function resetGroupTaskForm() {
+    groupTaskForm.reset();
+    groupTaskStatus.value = "pendiente";
+    groupEditingIndex.value = "";
+    groupSaveButton.textContent = "Guardar";
+    groupCancelEditButton.style.display = "none";
+    if (groupTaskAssignee.options.length > 0) {
+      const idx = Array.from(groupTaskAssignee.options)
+        .findIndex(opt => opt.value === currentUser);
+      groupTaskAssignee.selectedIndex = idx >= 0 ? idx : 0;
+    }
+  }
+
+  // ==== OPCIONES DE ASIGNACIÓN ====
+  function refreshAssigneeOptions() {
+    groupTaskAssignee.innerHTML = "";
+
+    const user = users.find(u => u.username === currentUser);
+    if (!user || !user.group) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Sin grupo";
+      groupTaskAssignee.appendChild(opt);
+      groupTaskAssignee.disabled = true;
+      return;
+    }
+
+    const groupName = user.group;
+    const groupMembers = users.filter(u => u.group === groupName);
+
+    groupTaskAssignee.disabled = false;
+
+    if (groupMembers.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Sin miembros";
+      groupTaskAssignee.appendChild(opt);
+      return;
+    }
+
+    groupMembers.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m.username;
+      opt.textContent = m.username;
+      groupTaskAssignee.appendChild(opt);
+    });
+
+    const idx = groupMembers.findIndex(m => m.username === currentUser);
+    groupTaskAssignee.selectedIndex = idx >= 0 ? idx : 0;
+  }
+
+  // ==== STORAGE ====
+  function usersKey() {
+    return USERS_KEY;
+  }
+
+  function tasksKey() {
+    return TASK_PREFIX + currentUser;
+  }
+
+  function groupTasksKey() {
+    const user = users.find(u => u.username === currentUser);
+    if (!user || !user.group) return null;
+    return GROUP_TASK_PREFIX + user.group;
+  }
+
+  function loadUsers() {
+    try {
+      users = JSON.parse(localStorage.getItem(usersKey()) || "[]");
+    } catch {
+      users = [];
+    }
+  }
+
+  function saveUsers() {
+    localStorage.setItem(usersKey(), JSON.stringify(users));
+  }
+
+  function loadTasks() {
+    try {
+      tasks = JSON.parse(localStorage.getItem(tasksKey()) || "[]");
+    } catch {
+      tasks = [];
+    }
+  }
+
+  function saveTasks() {
+    localStorage.setItem(tasksKey(), JSON.stringify(tasks));
+  }
+
+  function loadGroupTasks() {
+    const key = groupTasksKey();
+    if (!key) {
+      groupTasks = [];
+      return;
+    }
+    try {
+      groupTasks = JSON.parse(localStorage.getItem(key) || "[]");
+    } catch {
+      groupTasks = [];
+    }
+  }
+
+  function saveGroupTasks() {
+    const key = groupTasksKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(groupTasks));
+  }
+</script>
+
+</body>
+</html>
