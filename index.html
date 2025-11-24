@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrganízateFácil</title>
+
+  <!-- CSS separado -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<h1>OrganízateFácil</h1>
+
+<!-- ============== LOGIN / REGISTRO ============== -->
+<section id="auth-section">
+  <h2>Registro</h2>
+  <form id="register-form">
+    <input type="text" id="reg-username" placeholder="Nombre de usuario" required />
+    <input type="password" id="reg-password" placeholder="Contraseña" required />
+    <input type="password" id="reg-password2" placeholder="Repetir contraseña" required />
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <h2>Iniciar sesión</h2>
+  <form id="login-form">
+    <input type="text" id="login-username" placeholder="Nombre de usuario" required />
+    <input type="password" id="login-password" placeholder="Contraseña" required />
+    <button type="submit">Iniciar sesión</button>
+  </form>
+</section>
+
+<!-- ============== APP ============== -->
+<section id="app-section" style="display:none;">
+  <div class="top-bar">
+    <div>
+      Usuario: <strong><span id="user-name"></span></strong>
+    </div>
+    <button id="logout-button">Cerrar sesión</button>
+  </div>
+
+  <!-- GRUPO -->
+  <section id="group-section">
+    <h2>Equipo</h2>
+    <p class="subtitulo">
+      Escribe el nombre del equipo para crearlo o unirte a él.
+    </p>
+    <form id="group-form">
+      <input type="text" id="group-name" placeholder="Nombre del grupo (ej: equipo1)" required />
+      <button type="submit">Crear / Unirse</button>
+    </form>
+    <p>Equipo actual: <strong><span id="current-group">Ninguno</span></strong></p>
+  </section>
+
+  <!-- TAREAS PERSONALES -->
+  <section id="personal-tasks-section">
+    <h2>Tareas personales</h2>
+    <form id="task-form">
+      <input type="text" id="task-input" placeholder="Nueva tarea personal" required />
+      <select id="task-status">
+        <option value="pendiente">Pendiente</option>
+        <option value="en-progreso">En progreso</option>
+        <option value="completado">Completado</option>
+      </select>
+      <input type="hidden" id="editing-index">
+      <button id="save-button" type="submit">Guardar</button>
+      <button id="cancel-edit-button" type="button" style="display:none;">Cancelar</button>
+    </form>
+    <ul id="task-list"></ul>
+  </section>
+
+  <!-- TAREAS GRUPALES -->
+  <section id="group-tasks-section" style="display:none;">
+    <h2>Tareas grupales</h2>
+    <p class="subtitulo">Tareas visibles para todos los integrantes del equipo.</p>
+    <form id="group-task-form">
+      <input type="text" id="group-task-input" placeholder="Nueva tarea grupal" required />
+      <select id="group-task-status">
+        <option value="pendiente">Pendiente</option>
+        <option value="en-progreso">En progreso</option>
+        <option value="completado">Completado</option>
+      </select>
+      <select id="group-task-assignee"></select>
+
+      <input type="hidden" id="group-editing-index">
+      <button id="group-save-button" type="submit">Guardar</button>
+      <button id="group-cancel-edit-button" type="button" style="display:none;">Cancelar</button>
+    </form>
+    <ul id="group-task-list"></ul>
+  </section>
+</section>
+
+<!-- JavaScript separado -->
+<script src="app.js"></script>
+</body>
+</html>
